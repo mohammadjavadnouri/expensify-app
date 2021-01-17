@@ -1,6 +1,7 @@
 import { createStore, combineReducers } from "redux";
 import uuid from "uuid";
 
+// ADD_EXPENSE
 const addExpense = ({
   description = "",
   note = "",
@@ -17,39 +18,48 @@ const addExpense = ({
   },
 });
 
+// REMOVE_EXPENSE
 const removeExpense = ({ id } = {}) => ({
   type: "REMOVE_EXPENSE",
   id,
 });
 
+// EDIT_EXPENSE
 const editExpense = (id, updates) => ({
   type: "EDIT_EXPENSE",
   id,
   updates,
 });
 
+// SET_TEXT_FILTER
 const setTextFilter = (text = "") => ({
   type: "SET_TEXT_FILTER",
   text,
 });
 
-const sortByAmount = () => ({
-  type: "SORT_BY_AMOUNT",
-});
-
+// SORT_BY_DATE
 const sortByDate = () => ({
   type: "SORT_BY_DATE",
 });
 
-const setStartDate = (startDate = undefined) => ({
+// SORT_BY_AMOUNT
+const sortByAmount = () => ({
+  type: "SORT_BY_AMOUNT",
+});
+
+// SET_START_DATE
+const setStartDate = (startDate) => ({
   type: "SET_START_DATE",
   startDate,
 });
 
-const setEndDate = (endDate = undefined) => ({
+// SET_END_DATE
+const setEndDate = (endDate) => ({
   type: "SET_END_DATE",
   endDate,
 });
+
+// Expenses Reducer
 
 const expensesReducerDefaultState = [];
 
@@ -70,11 +80,12 @@ const expensesReducer = (state = expensesReducerDefaultState, action) => {
           return expense;
         }
       });
-
     default:
       return state;
   }
 };
+
+// Filters Reducer
 
 const filtersReducerDefaultState = {
   text: "",
@@ -115,6 +126,23 @@ const filtersReducer = (state = filtersReducerDefaultState, action) => {
   }
 };
 
+// Get visible expenses
+const getVisibleExpenses = (expenses, { text, sortBy, startDate, endDate }) => {
+  return expenses.filter((expense) => {
+    const startDateMatch =
+      typeof startDate !== "number" || expense.createdAt >= startDate;
+    const endDateMatch =
+      typeof endDate !== "number" || expense.createdAt <= endDate;
+    const textMatch = expense.description
+      .toLowerCase()
+      .includes(text.toLowerCase());
+
+    return startDateMatch && endDateMatch && textMatch;
+  });
+};
+
+// Store creation
+
 const store = createStore(
   combineReducers({
     expenses: expensesReducer,
@@ -123,42 +151,44 @@ const store = createStore(
 );
 
 store.subscribe(() => {
-  console.log(store.getState());
+  const state = store.getState();
+  const visibleExpenses = getVisibleExpenses(state.expenses, state.filters);
+  console.log(visibleExpenses);
 });
 
 const expenseOne = store.dispatch(
-  addExpense({ description: "Rent", amount: 100 })
+  addExpense({ description: "Rent", amount: 100, createdAt: 1000 })
 );
 const expenseTwo = store.dispatch(
-  addExpense({ description: "Coffee", amount: 300 })
+  addExpense({ description: "Coffee", amount: 300, createdAt: -1000 })
 );
 
-store.dispatch(removeExpense({ id: expenseOne.expense.id }));
-store.dispatch(editExpense(expenseTwo.expense.id, { amount: 700 }));
+// store.dispatch(removeExpense({ id: expenseOne.expense.id }));
+// store.dispatch(editExpense(expenseTwo.expense.id, { amount: 500 }));
 
-store.dispatch(setTextFilter("rent"));
-store.dispatch(setTextFilter());
+store.dispatch(setTextFilter("ffe"));
+// store.dispatch(setTextFilter());
 
-store.dispatch(sortByAmount());
-store.dispatch(sortByDate());
+// store.dispatch(sortByAmount());
+// store.dispatch(sortByDate());
 
-store.dispatch(setStartDate(125));
-store.dispatch(setStartDate());
-store.dispatch(setEndDate(500));
+// store.dispatch(setStartDate(0)); // startDate 125
+// store.dispatch(setStartDate()); // startDate undefined
+// store.dispatch(setEndDate(999)); // endDate 1250
 
 const demoState = {
   expenses: [
     {
-      id: "h25l2Bhk@lhkLHKw*&T%CVfwG*!jeJ%n",
-      description: "Bahman Rent",
-      note: "Final Payment for tha address.",
-      amount: 5500000,
+      id: "poijasdfhwer",
+      description: "January Rent",
+      note: "This was the final payment for that address",
+      amount: 54500,
       createdAt: 0,
     },
   ],
   filters: {
     text: "rent",
-    sortBy: "amount", //date or amount
+    sortBy: "amount", // date or amount
     startDate: undefined,
     endDate: undefined,
   },
